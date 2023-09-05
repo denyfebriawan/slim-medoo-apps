@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Navbar</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="http://localhost:8080/siswa">Siswa</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="http://localhost:8080/sekolah">Sekolah</a>
+        </li>
+       
+      </ul>
+    </div>
+  </div>
+</nav>
+    <div class="container">
+      <!-- Button trigger modal -->
+      
+      <button type="button" class="btn btn-success my-3" data-bs-toggle="modal" data-bs-target="#staticBackdrop">Tambah Sekolah Baru</button>
+      <div class="d-flex justify-content-center">
+      </div>
+      
+
+      
+      <table id="myTable" class="table table-striped" style="width: 100%">
+        <thead>
+          <tr>
+            <th>No</th>
+            <th>Nama Sekolah</th>
+            <th>Alamat</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+  <!-- Create Modal -->
+      <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h1 class="modal-title fs-5" id="staticBackdropLabel">Tambah Sekolah Baru</h1>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-3">
+                
+                <label class="form-label">Nama Sekolah</label>
+                <input type="text" class="form-control mb-3" id="namaSekolahInput">
+                
+
+                <label class="form-label">Alamat Sekolah</label>
+                <input type="text" class="form-control mb-3" id="alamatSekolahInput">
+         
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-primary" id="simpanButton">Simpan</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+ 
+
+  <script>
+      $(document).ready(function () {
+        $("#myTable").DataTable({
+          ajax: {
+            url: "http://localhost:8080/data-sekolah",
+            dataSrc: "",
+          },
+          columns: [
+            
+            { data: "id" },
+            { data: "nama_sekolah" },
+            { data: "alamat" },
+          
+            {
+              // Kolom Aksi
+              data: null, // Tidak menggunakan data apapun dari server
+              render: function (data, type, full, meta) {
+                // Menampilkan tombol Edit dan Delete
+                return `
+                        <button class="btn btn-success btn-edit" data-id="${data.id}">Edit</button>
+                        <button class="btn btn-danger" onclick="deleteData(${data.id})">Delete</button>
+                    `;
+              },
+            },
+          ],
+        });
+      });
+
+      function createEditModal(idSiswa) {
+        var modalId = `editModal-${idSiswa}`;
+
+        // Buat modal edit dengan ID dinamis
+        var editModal = `
+            <div class="modal fade" id="${modalId}" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="staticBackdropLabel">Edit Sekolah</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Nama Siswa</label>
+                                <input type="text" class="form-control mb-3" id="namaSekolahEdit">
+                                <!-- Isi dengan data Sekolah yang sesuai -->
+                                
+                                <label class="form-label">Email</label>
+                                <input type="text" class="form-control mb-3" id="alamatSekolahEdit">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" id="simpanEditButton">Simpan Perubahan</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Masukkan modal edit ke dalam halaman
+        $("body").append(editModal);
+
+        // Populasi modal dengan data siswa yang sesuai (dapat menggunakan AJAX)
+        $.ajax({
+            url: `http://localhost:8080/data-sekolah-cek/${idSiswa}`, // Ganti dengan URL endpoint yang sesuai
+            dataType: "json",
+            success: function(data) {
+                $(`#${modalId} #namaSekolahEdit`).val(data.nama_sekolah);
+                
+                $(`#${modalId} #alamatSekolahEdit`).val(data.alamat);
+            },
+            error: function() {
+                console.error("Gagal mengambil data siswa.");
+            },
+        });
+
+        // Tampilkan modal edit
+        $(`#${modalId}`).modal("show");
+
+        // Handle klik tombol "Simpan Perubahan" pada modal edit
+        $(`#${modalId} #simpanEditButton`).click(function() {
+
+            var namaSekolahEdit = $(`#${modalId} #namaSekolahEdit`).val();
+            var alamatSekolahEdit = $(`#${modalId} #alamatSekolahEdit`).val();
+
+            var data = {
+                nama_sekolah: namaSekolahEdit,
+                alamat: alamatSekolahEdit,
+            };
+
+            console.log(data)
+
+            $.ajax({
+                url: `http://localhost:8080/data-sekolah/update/${idSiswa}`, // Ganti dengan URL endpoint Anda
+                method: "PUT", // Ubah sesuai dengan metode yang dibutuhkan (biasanya POST untuk membuat data baru)
+                dataType: "json",
+                data: data,
+                success: function(response) {
+                    // Handle respons dari server sesuai dengan kebutuhan Anda
+                    console.log(response);
+                    // Tutup modal setelah sukses
+                    $("#staticBackdrop").modal("hide");
+
+                          Swal.fire({
+                      icon: 'success',
+                      title: 'Sukses!',
+                      text: 'Data berhasil diperbarui',
+                  }).then(function() {
+               // Refresh halaman setelah menekan tombol "OK" pada SweetAlert
+               location.reload();
+                 });
+                  
+                },
+                error: function() {
+                    console.error("Gagal mengirim data ke server.");
+                }
+            });
+        });
+    }
+
+    // Handle klik tombol "Edit" pada tabel
+    $("#myTable").on("click", ".btn-edit", function() {
+        var idSiswa = $(this).data("id");
+        createEditModal(idSiswa);
+    });
+
+      // function populateSekolahSelect() {
+      //       $.ajax({
+      //           url: "http://localhost:8080/data-sekolah", // Ganti dengan URL endpoint Anda
+      //           dataType: "json",
+      //           success: function(data) {
+      //               var sekolahSelect = $("#sekolahSelect");
+
+      //               // Hapus opsi yang ada
+      //               sekolahSelect.find("option").remove();
+
+      //               // Tambahkan opsi-opsi sekolah dari data JSON
+      //               $.each(data, function(index, sekolah) {
+      //                   sekolahSelect.append($("<option>").text(sekolah.nama_sekolah).val(sekolah.id));
+      //               });
+
+      //               // Setelah mengisi opsi, Anda bisa menghapus atribut 'disabled' jika Anda menambahkannya sebelumnya
+      //               sekolahSelect.prop("disabled", false);
+      //           },
+      //           error: function() {
+      //               console.error("Gagal mengambil data sekolah.");
+      //           }
+      //       });
+      // }
+
+        // Panggil fungsi untuk mengisi pilihan sekolah saat modal dibuka
+        // $("#staticBackdrop").on("show.bs.modal", function() {
+        //     populateSekolahSelect();
+        // });
+
+      
+      function sendData() {
+            var namaSekolah = $("#namaSekolahInput").val();
+            var alamatSekolah = $("#alamatSekolahInput").val();
+
+            // Buat objek data yang akan dikirim ke server
+            var data = {
+                nama_sekolah: namaSekolah,
+                alamat: alamatSekolah,
+            };
+
+            // Kirim data ke server menggunakan AJAX
+            $.ajax({
+                url: "http://localhost:8080/create-sekolah", // Ganti dengan URL endpoint Anda
+                method: "POST", // Ubah sesuai dengan metode yang dibutuhkan (biasanya POST untuk membuat data baru)
+                dataType: "json",
+                data: data,
+                success: function(response) {
+                    // Handle respons dari server sesuai dengan kebutuhan Anda
+                    console.log(response);
+                    // Tutup modal setelah sukses
+                    $("#staticBackdrop").modal("hide");
+
+                          Swal.fire({
+                      icon: 'success',
+                      title: 'Sukses!',
+                      text: 'Data berhasil ditambahkan',
+                  }).then(function() {
+               // Refresh halaman setelah menekan tombol "OK" pada SweetAlert
+               location.reload();
+                 });
+                  
+                },
+                error: function() {
+                    console.error("Gagal mengirim data ke server.");
+                }
+            });
+        }
+
+        // Handle klik tombol "Simpan" untuk mengirim data
+        $("#simpanButton").click(function() {
+            sendData();
+        });
+
+      
+
+      function deleteData(id) {
+        Swal.fire({
+          title: `Apakah anda yakin?`,
+          
+          showCancelButton: true,
+          confirmButtonText: 'Hapus',
+          
+        }).then((result) => {
+          /* Read more about isConfirmed, isDenied below */
+          if (result.isConfirmed) {
+            $.ajax({
+              url: `http://localhost:8080/data-sekolah/${id}`,
+            });
+            Swal.fire('Data berhasil dihapus!', '', 'success').then(function() {
+               // Refresh halaman setelah menekan tombol "OK" pada SweetAlert
+               location.reload();
+                 });
+          } else if (result.isDenied) {
+            Swal.fire('Changes are not saved', '', 'info')
+          }
+        })
+      }
+
+      //  $.ajax({
+      //           url: "http://localhost:8080/data-sekolah", // Ganti dengan URL endpoint Anda
+      //           dataType: "json",
+      //           success: function(data) {
+      //               var sekolahFilterDropdown = $("#sekolahFilterDropdown");
+
+      //               sekolahFilterDropdown.append('<li><a class="dropdown-item" href="#" data-sekolah-id="semua">Semua</a></li>');
+
+      //               // Tambahkan opsi-opsi sekolah dari data JSON
+      //               $.each(data, function(index, sekolah) {
+      //                   sekolahFilterDropdown.append('<li><a class="dropdown-item" href="#" data-sekolah-id="' + sekolah.id + '">' + sekolah.nama_sekolah + '</a></li>');
+      //               });
+
+      //              sekolahFilterDropdown.find("a.dropdown-item").on("click", function(e) {
+      //                   e.preventDefault();
+      //                   var sekolahId = $(this).data("sekolah-id");
+      //                   filterTabelSiswa(sekolahId); // Panggil fungsi filterTabelSiswa dengan ID sekolah yang dipilih
+      //               });
+      //           },
+      //           error: function() {
+      //               console.error("Gagal mengambil data sekolah.");
+      //           }
+      //       });
+
+     
+    // function filterTabelSiswa(sekolahId) {
+
+    //   $.ajax({
+    //             url: "http://localhost:8080/data-member", // Ganti dengan URL endpoint Anda
+    //             dataType: "json",
+    //             success: function(data) {
+    //                 var table = $("#myTable").DataTable();
+    //               if (sekolahId === "semua") {
+                      
+    //                   table.clear().rows.add(data).draw();
+    //               } else {
+                    
+    //                 filterTableBySekolah(table, sekolahId);
+    //               }
+    //             },
+    //             error: function() {
+    //                 console.error("Gagal mengambil data sekolah.");
+    //             }
+    //         });  
+    // }
+
+    // function filterTableBySekolah(table, sekolahId) {
+        
+    //   // Kirim AJAX request untuk mendapatkan data berdasarkan ID sekolah
+    //   $.ajax({
+    //       url: `http://localhost:8080/data-member-filter/${sekolahId}`,
+          
+    //       dataType: "json",
+    //       success: function (data) {
+            
+    //           // Setel data yang diterima sebagai sumber data DataTable
+    //           table.clear().rows.add(data).draw();
+    //       },
+    //       error: function () {
+    //           console.error("Gagal mengambil data dari server.");
+    //       },
+    //   });
+    // }
+  </script>
+  </body>
+</html>
